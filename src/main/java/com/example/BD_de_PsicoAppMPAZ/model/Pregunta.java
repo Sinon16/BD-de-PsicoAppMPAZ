@@ -2,14 +2,9 @@ package com.example.BD_de_PsicoAppMPAZ.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.*;
 
 @Entity
 @Table(name = "preguntas")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 public class Pregunta {
 
     @Id
@@ -25,4 +20,25 @@ public class Pregunta {
     @JoinColumn(name = "cuestionario_id")
     @JsonIgnore
     private Cuestionario cuestionario;
+
+    public Pregunta() {}
+
+    public Pregunta(Long id, String enunciado, Integer orden, Cuestionario cuestionario) {
+        this.id = id;
+        this.enunciado = enunciado;
+        this.orden = orden;
+        this.cuestionario = cuestionario;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getEnunciado() { return enunciado; }
+    public void setEnunciado(String enunciado) { this.enunciado = enunciado; }
+
+    public Integer getOrden() { return orden; }
+    public void setOrden(Integer orden) { this.orden = orden; }
+
+    public Cuestionario getCuestionario() { return cuestionario; }
+    public void setCuestionario(Cuestionario cuestionario) { this.cuestionario = cuestionario; }
 }

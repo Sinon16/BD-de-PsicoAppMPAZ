@@ -19,7 +19,6 @@ public class AplicacionEvaluacionController {
     private final AplicacionEvaluacionService aplicacionService;
     private final RespuestaDetalleService respuestaDetalleService;
 
-    // Inyección de ambos servicios requeridos
     public AplicacionEvaluacionController(
             AplicacionEvaluacionService aplicacionService,
             RespuestaDetalleService respuestaDetalleService) {
@@ -32,7 +31,6 @@ public class AplicacionEvaluacionController {
         return ResponseEntity.ok(aplicacionService.obtenerTodas());
     }
 
-    // Endpoint LIBRE: El estudiante consulta su test usando el código temporal (ej. EST-101)
     @GetMapping("/codigo/{codigoTemporal}")
     public ResponseEntity<AplicacionEvaluacion> obtenerPorCodigo(@PathVariable String codigoTemporal) {
         return aplicacionService.obtenerPorCodigoTemporal(codigoTemporal)
@@ -45,10 +43,11 @@ public class AplicacionEvaluacionController {
         return ResponseEntity.ok(aplicacionService.crearAplicacion(aplicacion));
     }
 
-    // Endpoint LIBRE: El estudiante envía sus respuestas usando el RespuestaDetalleService
+    // ÚNICO ENDPOINT DE RESPUESTA: Soporta recibir el puntaje Opcional enviado desde Android
     @PostMapping("/responder/{codigoTemporal}")
     public ResponseEntity<AplicacionEvaluacion> responderYFinalizar(
             @PathVariable String codigoTemporal,
+            @RequestParam(required = false) Integer puntajeCalculado,
             @RequestBody List<RespuestaDetalle> respuestas) {
         
         Optional<AplicacionEvaluacion> optApp = aplicacionService.obtenerPorCodigoTemporal(codigoTemporal);
@@ -58,7 +57,6 @@ public class AplicacionEvaluacionController {
 
         AplicacionEvaluacion app = optApp.get();
 
-        // 1. Enlazar las respuestas con la aplicación encontrada
         for (RespuestaDetalle r : respuestas) {
             r.setAplicacionEvaluacion(app);
             if (r.getFechaRespuesta() == null) {
@@ -66,17 +64,18 @@ public class AplicacionEvaluacionController {
             }
         }
 
-        // 2. Guardar las respuestas mediante RespuestaDetalleService
         respuestaDetalleService.guardarTodas(respuestas);
 
-        // 3. Actualizar el estado y fecha de la sesión del test
+        if (puntajeCalculado != null) {
+            app.setPuntajeTotal(puntajeCalculado);
+        }
+
         app.setFechaFinalizacion(LocalDateTime.now());
         app.setEstado("COMPLETADA");
         
         return ResponseEntity.ok(aplicacionService.crearAplicacion(app));
     }
 
-    // EXCLUSIVO PSICÓLOGO: Agrega feedback clínico e indicaciones para el profesor
     @PutMapping("/feedback/{id}")
     public ResponseEntity<AplicacionEvaluacion> agregarFeedback(
             @PathVariable Long id,
